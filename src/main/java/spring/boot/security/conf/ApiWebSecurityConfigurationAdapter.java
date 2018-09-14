@@ -2,17 +2,15 @@ package spring.boot.security.conf;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.authentication.ProviderManagerBuilder;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Order(1)
 @Configuration
@@ -24,8 +22,9 @@ public class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAda
 
 	// https://stackoverflow.com/questions/48628389/how-to-configure-httpsecurity-for-this-situation-spring-boot
 
+	@Autowired
 	private MyAuthenticationProvider myAuthenticationProvider;
-	
+
 	// 处理环境
 	@Override
 	public void configure(WebSecurity web) throws Exception {
@@ -38,7 +37,8 @@ public class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAda
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		log.info("配置HttpSecurity");
-		http.authorizeRequests().antMatchers("/html/**").permitAll().anyRequest().permitAll();
+		http.authenticationProvider(myAuthenticationProvider).addFilterAfter(new MyAuthenticationFilter("/*"), UsernamePasswordAuthenticationFilter.class);
+		http.authorizeRequests().antMatchers("/html/**").permitAll().and().formLogin().loginPage("/html/login.html").and().authorizeRequests().anyRequest().authenticated();
 	}
 
 	// 处理认证

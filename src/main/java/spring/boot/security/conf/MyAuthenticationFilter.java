@@ -12,25 +12,32 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
 /**
- * 第二步
- * 实现短信登录过滤器 {@link UsernamePasswordAuthenticationFilter}
+ * 第二步 实现短信登录过滤器 {@link UsernamePasswordAuthenticationFilter}
+ * 
  * @author liqq
  *
  */
 
-public class MyAuthenticationFilter extends AbstractAuthenticationProcessingFilter{
-	
+public class MyAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
+
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 	private String usernameParameter = "username";
 	private String smsCodeParameter = "smsCode";
 
-	protected MyAuthenticationFilter(String defaultFilterProcessesUrl) {
-		super(defaultFilterProcessesUrl);
+	/**
+	 * 过滤所有请求
+	 * @param defaultFilterProcessesUrl
+	 */
+	protected MyAuthenticationFilter() {
+		super(new AntPathRequestMatcher("/*", "POST"));
 	}
 
 	@Override
-	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
+	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+			throws AuthenticationException, IOException, ServletException {
 		logger.info("执行过滤器,组装Token");
 		String username = obtainUsername(request);
 		String smsCode = obtainSmsCode(request);
@@ -52,13 +59,13 @@ public class MyAuthenticationFilter extends AbstractAuthenticationProcessingFilt
 	protected String obtainSmsCode(HttpServletRequest request) {
 		return request.getParameter(smsCodeParameter);
 	}
-	
+
 	protected String obtainUsername(HttpServletRequest request) {
 		return request.getParameter(usernameParameter);
 	}
 
-	protected void setDetails(HttpServletRequest request,
-			MyAuthenticationToken authRequest) {
+	protected void setDetails(HttpServletRequest request, MyAuthenticationToken authRequest) {
 		authRequest.setDetails(authenticationDetailsSource.buildDetails(request));
 	}
+
 }

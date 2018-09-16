@@ -5,22 +5,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-@Order(1)
 @Configuration
 @EnableWebSecurity
 public class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 	private Logger log = LoggerFactory.getLogger(this.getClass());
 
-	// https://stackoverflow.com/questions/22998731/httpsecurity-websecurity-and-authenticationmanagerbuilder
-
-	// https://stackoverflow.com/questions/48628389/how-to-configure-httpsecurity-for-this-situation-spring-boot
+	//https://www.jianshu.com/p/18875c2995f1
 
 	@Autowired
 	private MyAuthenticationProvider myAuthenticationProvider;
@@ -37,19 +34,15 @@ public class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAda
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		log.info("配置HttpSecurity");
-		http.authenticationProvider(myAuthenticationProvider).addFilterAfter(new MyAuthenticationFilter("/*"), UsernamePasswordAuthenticationFilter.class);
-		http.authorizeRequests().antMatchers("/html/**").permitAll().and().formLogin().loginPage("/html/login.html").and().authorizeRequests().anyRequest().authenticated();
-	}
-
-	// 处理认证
-	@Override
-	protected void configure(AuthenticationManagerBuilder auth) {
-		log.info("配置AuthenticationManagerBuilder");
-		try {
-			auth.authenticationProvider(myAuthenticationProvider);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		log.info("myAuthenticationProvider:{}", myAuthenticationProvider);
+		MyAuthenticationFilter myAuthenticationFilter = new MyAuthenticationFilter();
+		myAuthenticationFilter.setAuthenticationManager(http.getSharedObject(AuthenticationManager.class));
+		log.info("myAuthenticationProvider.userDetailsService:{}",myAuthenticationProvider.userDetailsService);
+		http.authenticationProvider(myAuthenticationProvider);
+		http.addFilterAfter(myAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+		http.formLogin().loginPage("/html/login.html");
+		http.authorizeRequests().anyRequest().authenticated();
+		http.authorizeRequests().antMatchers("/html/**").permitAll();
 	}
 
 }

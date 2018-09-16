@@ -24,7 +24,7 @@ public class MyAuthenticationProvider implements AuthenticationProvider {
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
-	private UserDetailsService userDetailsService;
+	public UserDetailsService userDetailsService;
 
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -35,18 +35,18 @@ public class MyAuthenticationProvider implements AuthenticationProvider {
 		String mobile = (String) authenticationToken.getPrincipal();
 		String smsCode = (String) authenticationToken.getCredentials();
 
-		//加载用户详细信息,角色信息
+		// 加载用户详细信息,角色信息
 		UserDetails details = userDetailsService.loadUserByUsername(mobile);
 
 		logger.info("手机{}和短信{}", mobile, smsCode);
-		if (smsCode==null) {
-			//验证短信验证码
+		if (smsCode == null) {
+			// 验证短信验证码
 			throw new BadCredentialsException("请填写正确的验证码");
 		}
-		if(details == null){
-			//用户不存在,创建用户
+		if (details == null) {
+			// 用户不存在,创建用户
 		}
-		//验证通过后,把用户
+		// 验证通过后,把用户
 		authenticationToken.setDetails(details);
 		return authenticationToken;
 	}
@@ -56,5 +56,6 @@ public class MyAuthenticationProvider implements AuthenticationProvider {
 		// 支持所有认证
 		return MyAuthenticationToken.class.isAssignableFrom(authentication);
 	}
+
 
 }
